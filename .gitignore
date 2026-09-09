@@ -8,6 +8,8 @@ allure-report/
 wdio-logs/
 appium.log
 *.log
+recordings/
+screenshots/
 
 # App binaries (drop your own locally, don't commit them)
 apps/*.apk
