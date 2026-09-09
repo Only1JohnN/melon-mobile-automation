@@ -1,4 +1,4 @@
-import { log } from '../../utils/logger';
+import { step } from '../../utils/logger';
 
 class LoginPage {
   // No resource-id here either — the phone number field comes first on this
@@ -20,13 +20,13 @@ class LoginPage {
   }
 
   async enterPin(pin: string) {
-    log.info('Entering PIN'); // never log the PIN value itself
+    step('Entering PIN'); // never log the PIN value itself
     await this.pinInput.waitForDisplayed();
     await this.pinInput.setValue(pin);
   }
 
   async submit() {
-    log.info('Submitting PIN (tapping Login)');
+    step('Submitting PIN (tapping Login)');
     await this.loginButton.click();
   }
 }

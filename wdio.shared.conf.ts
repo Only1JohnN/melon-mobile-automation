@@ -16,7 +16,18 @@ export const config: Partial<WebdriverIO.Config> = {
     timeout: 120000,
   },
 
-  reporters: ['spec'],
+  reporters: [
+    'spec',
+    [
+      'allure',
+      {
+        outputDir: 'allure-results',
+        // We attach our own recording/screenshot in wdio.conf.ts's afterTest
+        // hook instead, so we don't need Allure's built-in per-command ones.
+        disableWebdriverScreenshotsReporting: true,
+      },
+    ],
+  ],
 
   maxInstances: 1,
   logLevel: 'info',

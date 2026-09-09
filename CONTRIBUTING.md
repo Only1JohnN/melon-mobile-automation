@@ -36,3 +36,33 @@ Run by tag:
 npm run test:smoke
 npm run test:regression
 ```
+
+## CI and reports
+
+Every push to `main` and every PR runs the suite in GitHub Actions
+(`.github/workflows/test.yml`), on a hosted emulator — no local Mac resource
+issues to fight, unlike running it on a laptop. Each run produces an Allure
+report: pass/fail per test, the step-by-step timeline, the screen recording,
+and (on failure) a screenshot and the error. On `main`, that report is
+published to GitHub Pages at:
+
+```
+https://only1johnn.github.io/melon-mobile-automation/
+```
+
+A summary and that link are also posted to the team's Zoho Cliq channel after
+every run.
+
+To view a report locally instead:
+
+```bash
+npm test                # writes results to ./allure-results
+npm run report:generate # builds the HTML report into ./allure-report
+npm run report:open     # opens it in your browser
+```
+
+**One-time setup for whoever owns the repo:**
+- Add repo secrets `MELON_APK_URL` (a URL the workflow can download the
+  staging APK from) and `CLIQ_WEBHOOK_URL` (the Cliq channel's incoming
+  webhook — Cliq: channel → Settings → Webhooks → Incoming Webhook).
+- Enable Pages once: **Settings → Pages → Source: GitHub Actions**.

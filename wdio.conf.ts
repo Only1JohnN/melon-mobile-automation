@@ -1,10 +1,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { execSync } from 'node:child_process';
+import { addAttachment } from '@wdio/allure-reporter';
 import { config as sharedConfig } from './wdio.shared.conf.ts';
 import { log } from './test/utils/logger.ts';
 
 const appPath = path.resolve(process.cwd(), process.env.APP_PATH || './apps/melon.apk');
+const headless = process.env.ANDROID_EMULATOR_HEADLESS === 'true';
 
 const outputDir = (subdir: string) => {
   const dir = path.resolve(process.cwd(), subdir);
@@ -30,6 +32,11 @@ export const config: WebdriverIO.Config = {
       'appium:autoGrantPermissions': true,
       'appium:noReset': false,
       'appium:newCommandTimeout': 240,
+      // -no-window skips rendering an emulator GUI window at all, which
+      // cuts out a real chunk of host overhead (no GPU compositing) — worth
+      // it on a resource-tight machine. Appium still boots and controls the
+      // emulator the same way; you just won't see it on screen.
+      ...(headless && { 'appium:avdArgs': '-no-window -no-audio -gpu swiftshader_indirect' }),
     },
   ],
 
@@ -54,13 +61,17 @@ export const config: WebdriverIO.Config = {
   afterTest: async (test, _context, result) => {
     const safeName = test.title.replace(/[^a-z0-9]+/gi, '_');
 
+    // These save to disk *and* return the file as a Buffer, so we can hand
+    // the same bytes straight to Allure without reading the file back.
     const videoPath = path.join(outputDir('recordings'), `${safeName}-${Date.now()}.mp4`);
-    await driver.saveRecordingScreen(videoPath);
+    const videoBuffer = await driver.saveRecordingScreen(videoPath);
+    await addAttachment('Recording', videoBuffer, 'video/mp4');
     log.info(`Saved recording: ${videoPath}`);
 
     if (!result.passed) {
       const screenshotPath = path.join(outputDir('screenshots'), `${safeName}-${Date.now()}.png`);
-      await driver.saveScreenshot(screenshotPath);
+      const screenshotBuffer = await driver.saveScreenshot(screenshotPath);
+      await addAttachment('Failure screenshot', screenshotBuffer, 'image/png');
       log.info(`Saved failure screenshot: ${screenshotPath}`);
     }
   },

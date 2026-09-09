@@ -1,0 +1,120 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  ANDROID_AVD_NAME: Melon_Test
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - run: npm ci
+
+      - name: Download staging APK
+        run: |
+          mkdir -p apps
+          curl -L --fail -o apps/melon.apk "${{ secrets.MELON_APK_URL }}"
+
+      - name: Enable KVM (required for hardware-accelerated emulation)
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run tests on emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          avd-name: ${{ env.ANDROID_AVD_NAME }}
+          force-avd-creation: false
+          disable-animations: true
+          script: npm test
+
+      # Runs even if the test step above failed, so a report always exists —
+      # a failing run is exactly when the team most wants to see it.
+      - name: Generate Allure report
+        if: always()
+        run: npm run report:generate
+
+      - name: Upload report for Pages
+        if: always()
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: allure-report
+          if-no-files-found: warn
+
+      - name: Upload report as workflow artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: allure-report
+          retention-days: 30
+          if-no-files-found: warn
+
+  deploy:
+    needs: test
+    if: always() && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+  notify:
+    needs: [test, deploy]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: allure-report
+          path: allure-report
+
+      - name: Send summary to Zoho Cliq
+        env:
+          CLIQ_WEBHOOK_URL: ${{ secrets.CLIQ_WEBHOOK_URL }}
+        run: |
+          STATS=$(jq -r '.statistic | "\(.passed) passed, \(.failed) failed, \(.broken) broken, \(.skipped) skipped (total \(.total))"' allure-report/widgets/summary.json 2>/dev/null || echo "summary unavailable")
+          STATUS="${{ needs.test.result }}"
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          PAGES_LINE=""
+          if [ "${{ needs.deploy.result }}" = "success" ]; then
+            PAGES_LINE=$(printf '\nReport: %s' "${{ needs.deploy.outputs.page_url }}")
+          fi
+
+          # printf (not bash) expands the \n escapes here, so this comes out
+          # as real newlines regardless of how the format string is quoted.
+          MESSAGE=$(printf 'Melon mobile tests: %s on %s (%s)\n%s\nRun: %s%s' \
+            "$STATUS" "${{ github.ref_name }}" "${{ github.sha }}" "$STATS" "$RUN_URL" "$PAGES_LINE")
+
+          curl -X POST "$CLIQ_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n --arg text "$MESSAGE" '{text: $text}')"

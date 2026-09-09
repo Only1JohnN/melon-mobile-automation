@@ -1,4 +1,4 @@
-import { log } from '../../utils/logger';
+import { step } from '../../utils/logger';
 
 class OnboardingPage {
   get getStartedButton() {
@@ -6,7 +6,7 @@ class OnboardingPage {
   }
 
   async getStarted() {
-    log.info('Dismissing onboarding (tapping Get started)');
+    step('Dismissing onboarding (tapping Get started)');
     await this.getStartedButton.waitForDisplayed();
     await this.getStartedButton.click();
   }

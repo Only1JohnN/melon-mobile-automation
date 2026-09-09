@@ -1,4 +1,4 @@
-import { log } from '../../utils/logger';
+import { step } from '../../utils/logger';
 
 class HomePage {
   get homeTab() {
@@ -23,7 +23,7 @@ class HomePage {
 
       const continueButtons = await $$('~Continue');
       if ((await continueButtons.length) > 0) {
-        log.info('Dismissing location interstitial (tapping Continue)');
+        step('Dismissing location interstitial (tapping Continue)');
         await continueButtons[0].click();
         await driver.pause(1500);
         continue;
@@ -31,13 +31,13 @@ class HomePage {
 
       const closeIcon = await this.findModalCloseIcon();
       if (closeIcon) {
-        log.info(`Dismissing interstitial #${attempt} (closing promo modal)`);
+        step(`Dismissing interstitial #${attempt} (closing promo modal)`);
         await closeIcon.click();
         await driver.pause(1500);
         continue;
       }
 
-      log.info(`Home not visible yet on attempt #${attempt}, waiting`);
+      step(`Home not visible yet on attempt #${attempt}, waiting`);
       await driver.pause(1500);
     }
 

@@ -1,4 +1,4 @@
-import { log } from '../../utils/logger';
+import { step } from '../../utils/logger';
 
 class WelcomePage {
   // This field has no resource-id or label, so we grab it by position —
@@ -12,13 +12,13 @@ class WelcomePage {
   }
 
   async enterPhoneNumber(phoneNumber: string) {
-    log.info(`Entering phone number: ${phoneNumber}`);
+    step(`Entering phone number: ${phoneNumber}`);
     await this.phoneNumberInput.waitForDisplayed();
     await this.phoneNumberInput.setValue(phoneNumber);
   }
 
   async submit() {
-    log.info('Submitting phone number (tapping Continue)');
+    step('Submitting phone number (tapping Continue)');
     await this.continueButton.click();
   }
 }
