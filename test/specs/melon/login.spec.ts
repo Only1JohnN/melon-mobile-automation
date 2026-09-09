@@ -16,7 +16,7 @@ import { log } from '../../utils/logger';
 // Tests
 // ---------------------------------------------------------------------------
 describe('Melon login', () => {
-  it('logs in with a valid phone number and PIN', async () => {
+  it('@smoke @regression logs in with a valid phone number and PIN', async () => {
     const phoneNumber = process.env.TEST_PHONE_NUMBER;
     const pin = process.env.TEST_PIN;
 
