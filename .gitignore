@@ -1,0 +1,22 @@
+node_modules/
+dist/
+.env
+
+# WebdriverIO / Appium output
+allure-results/
+allure-report/
+wdio-logs/
+appium.log
+*.log
+
+# App binaries (drop your own locally, don't commit them)
+apps/*.apk
+apps/*.aab
+apps/*.apks
+apps/*.ipa
+
+# bundletool (downloaded on demand, see CONTRIBUTING.md)
+tools/bundletool.jar
+
+# OS
+.DS_Store
