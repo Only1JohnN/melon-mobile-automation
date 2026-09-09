@@ -34,17 +34,17 @@ export const config: WebdriverIO.Config = {
   ],
 
   before: async () => {
-    // Melon's login checks the device's location; on a fresh emulator no
-    // provider ever resolves a fix, so the backend rejects login with
-    // "Validation Check Failed" even with correct credentials. The app has
-    // already launched once session setup completes, so restart it after
-    // fixing the location or its first (only) location request misses the fix.
-    log.info('Fixing emulator GPS location and restarting the app');
+    // Melon checks the device's location during login, and a fresh emulator
+    // never has one set — so login fails with "Validation Check Failed" even
+    // with the right credentials. We set a fake GPS location, then restart
+    // the app so it actually picks the fix up (it only checks once, at
+    // launch, and the app has already launched by this point in the session).
+    log.info('Setting emulator GPS location and restarting the app');
     execSync('adb emu geo fix 3.3792 6.5244');
-    await driver.pause(1000); // let the fix propagate to the location providers
+    await driver.pause(1000); // give the location time to register
     await driver.terminateApp('com.melonafrica.staging');
     await driver.activateApp('com.melonafrica.staging');
-    await driver.pause(2000); // let the app pick up the fix before the test drives it
+    await driver.pause(2000); // give the app time to reload before the test starts
   },
 
   beforeTest: async () => {

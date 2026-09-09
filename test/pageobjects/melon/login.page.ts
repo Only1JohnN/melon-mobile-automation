@@ -1,8 +1,8 @@
 import { log } from '../../utils/logger';
 
-// Same lack-of-testID situation as WelcomePage: the phone number (re-shown,
-// read-only-looking) is the 1st EditText on this screen, PIN is the 2nd.
 class LoginPage {
+  // No resource-id here either — the phone number field comes first on this
+  // screen, so the PIN field is the second EditText.
   get pinInput() {
     return $('(//android.widget.EditText)[2]');
   }

@@ -1,8 +1,8 @@
 import { log } from '../../utils/logger';
 
-// The app has no testID/accessibilityLabel on this field, so it's targeted by
-// position among EditTexts on screen (there's only one here).
 class WelcomePage {
+  // This field has no resource-id or label, so we grab it by position —
+  // it's the only text field on this screen.
   get phoneNumberInput() {
     return $('(//android.widget.EditText)[1]');
   }
