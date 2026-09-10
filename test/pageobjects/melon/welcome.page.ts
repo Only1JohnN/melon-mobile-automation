@@ -17,7 +17,10 @@ class WelcomePage {
 
   async enterPhoneNumber(phoneNumber: string) {
     step(`Entering phone number: ${phoneNumber}`);
-    await this.phoneNumberInput.waitForDisplayed();
+    // This screen can follow right after tapping "Get started" or logging
+    // out, both of which are still mid-transition when this runs — give it
+    // more than the default 15s.
+    await this.phoneNumberInput.waitForDisplayed({ timeout: 30000 });
     await this.phoneNumberInput.setValue(phoneNumber);
   }
 

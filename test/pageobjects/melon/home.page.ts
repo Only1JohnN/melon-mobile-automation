@@ -62,6 +62,26 @@ class HomePage {
 
     return null;
   }
+
+  // The notification bell has no label either. It's the header's other
+  // unlabeled icon, sitting top-right (the avatar is top-left).
+  async openNotifications() {
+    step('Opening notifications');
+    const candidates = await $$('//android.view.ViewGroup[@clickable="true" and @NAF="true"]');
+    const count = await candidates.length;
+
+    for (let i = 0; i < count; i++) {
+      const bounds = await candidates[i].getAttribute('bounds');
+      const left = Number(bounds?.match(/\[(\d+),\d+\]/)?.[1]);
+      const top = Number(bounds?.match(/\[\d+,(\d+)\]/)?.[1]);
+      if (!Number.isNaN(left) && !Number.isNaN(top) && left > 540 && top < 400) {
+        await candidates[i].click();
+        return;
+      }
+    }
+
+    throw new Error('Notification bell not found');
+  }
 }
 
 export default new HomePage();
