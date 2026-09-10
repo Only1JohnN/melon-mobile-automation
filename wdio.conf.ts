@@ -32,6 +32,13 @@ export const config: WebdriverIO.Config = {
       'appium:autoGrantPermissions': true,
       'appium:noReset': false,
       'appium:newCommandTimeout': 240,
+      // Don't launch the app the moment the session starts — we need to set
+      // a fake GPS location first (see the `before` hook), and the app only
+      // checks location once, at launch. Launching it ourselves afterwards
+      // means we never have to terminate-then-relaunch, which turned out to
+      // be unreliable under load (the app wouldn't die within any timeout
+      // we tried).
+      'appium:autoLaunch': false,
       // -no-window skips rendering an emulator GUI window at all, which
       // cuts out a real chunk of host overhead (no GPU compositing) — worth
       // it on a resource-tight machine. Appium still boots and controls the
@@ -43,15 +50,16 @@ export const config: WebdriverIO.Config = {
   before: async () => {
     // Melon checks the device's location during login, and a fresh emulator
     // never has one set — so login fails with "Validation Check Failed" even
-    // with the right credentials. We set a fake GPS location, then restart
-    // the app so it actually picks the fix up (it only checks once, at
-    // launch, and the app has already launched by this point in the session).
-    log.info('Setting emulator GPS location and restarting the app');
+    // with the right credentials. Fix the location before the app's first
+    // launch (see `appium:autoLaunch: false` above) so it's already there
+    // for that one-time check.
+    log.info('Setting emulator GPS location');
     execSync('adb emu geo fix 3.3792 6.5244');
     await driver.pause(1000); // give the location time to register
-    await driver.terminateApp('com.melonafrica.staging');
+
+    log.info('Launching the app');
     await driver.activateApp('com.melonafrica.staging');
-    await driver.pause(2000); // give the app time to reload before the test starts
+    await driver.pause(2000); // give the app time to load before the test starts
   },
 
   beforeTest: async () => {

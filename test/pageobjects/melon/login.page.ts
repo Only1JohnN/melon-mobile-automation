@@ -19,6 +19,12 @@ class LoginPage {
     return $('//android.widget.TextView[@text="Validation Check Failed"]');
   }
 
+  // Shown as a dismissible banner at the top of the screen for a few
+  // seconds after a wrong PIN, then it auto-hides on its own.
+  get incorrectCredentialsError() {
+    return $('//android.widget.TextView[@text="Incorrect Credentials"]');
+  }
+
   async enterPin(pin: string) {
     step('Entering PIN'); // never log the PIN value itself
     await this.pinInput.waitForDisplayed();

@@ -11,6 +11,10 @@ class WelcomePage {
     return $('~Continue');
   }
 
+  get phoneNumberError() {
+    return $('//android.widget.TextView[@text="Phone number should be 11 digits"]');
+  }
+
   async enterPhoneNumber(phoneNumber: string) {
     step(`Entering phone number: ${phoneNumber}`);
     await this.phoneNumberInput.waitForDisplayed();

@@ -36,4 +36,33 @@ describe('Melon login', () => {
     await homePage.waitUntilLoaded();
     log.info('Login succeeded');
   });
+
+  it('@regression rejects a phone number that is not 11 digits', async () => {
+    await onboardingPage.getStarted();
+
+    await welcomePage.enterPhoneNumber('123');
+    await welcomePage.submit();
+
+    await welcomePage.phoneNumberError.waitForDisplayed();
+  });
+
+  it('@regression rejects a wrong PIN', async () => {
+    const phoneNumber = process.env.TEST_PHONE_NUMBER;
+
+    if (!phoneNumber) {
+      throw new Error('Set TEST_PHONE_NUMBER in .env to run this spec');
+    }
+
+    await onboardingPage.getStarted();
+
+    await welcomePage.enterPhoneNumber(phoneNumber);
+    await welcomePage.submit();
+
+    await loginPage.enterPin('9999');
+    await loginPage.submit();
+
+    // The error banner auto-hides after a few seconds, so this has to catch
+    // it while it's up rather than waiting for some stable end state.
+    await loginPage.incorrectCredentialsError.waitForDisplayed({ timeout: 15000 });
+  });
 });
