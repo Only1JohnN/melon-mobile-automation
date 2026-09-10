@@ -19,6 +19,20 @@ class ShareCoinPage {
     return $('//android.widget.TextView[@text="Coins Shared successfully"]');
   }
 
+  // Same transient "Incorrect Credentials" banner the login PIN screen uses —
+  // this confirmation PIN goes through the same auth check under the hood.
+  get incorrectPinError() {
+    return $('//android.widget.TextView[@text="Incorrect Credentials"]');
+  }
+
+  // An invalid Melon ID or an amount above balance never advances past this
+  // form, so the reliable signal is that the submit button (or the form
+  // itself) is still there rather than a specific error string — the exact
+  // wording wasn't confirmable this session, so we assert on outcome instead.
+  async isStillOnForm() {
+    return this.melonIdInput.isDisplayed().catch(() => false);
+  }
+
   async shareCoins(melonId: string, amount: string) {
     step(`Sharing ${amount} coins with ${melonId}`);
     await this.melonIdInput.waitForDisplayed();

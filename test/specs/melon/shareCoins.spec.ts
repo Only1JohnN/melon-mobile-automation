@@ -10,6 +10,20 @@ import { log } from '../../utils/logger';
 // ---------------------------------------------------------------------------
 // Nothing here yet — this spec only drives the UI.
 
+// After a rejected share (bad Melon ID, amount too high, wrong PIN) we need
+// to get back to the bottom nav to log out cleanly. The number of screens in
+// between varies by which case failed, so just back out until Profile shows
+// up again instead of hardcoding a screen count.
+async function returnToProfileTab() {
+  for (let attempt = 1; attempt <= 5; attempt++) {
+    if (await profilePage.profileTab.isDisplayed().catch(() => false)) {
+      return;
+    }
+    await driver.back();
+    await driver.pause(1000);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -96,5 +110,73 @@ describe('Melon share coins', () => {
       .heading(`${senderName} Shared ${amount.toLocaleString()} Coins with you`)
       .waitForDisplayed();
     log.info('Recipient balance and notification confirmed');
+  });
+
+  it('@regression rejects sharing to an invalid Melon ID', async function () {
+    this.timeout(180000);
+
+    const senderPhone = process.env.TEST_PHONE_NUMBER!;
+    const senderPin = process.env.TEST_PIN!;
+
+    await login(senderPhone, senderPin);
+    await profilePage.open();
+    await profilePage.shareCoinsButton.click();
+    await shareCoinPage.shareCoins('NOTAREALMELONID999', '10');
+
+    // Exact wording for this rejection wasn't verified live this session —
+    // the reliable check is that it never lets the share through.
+    const stillOnForm = await shareCoinPage.isStillOnForm();
+    if (!stillOnForm) {
+      throw new Error('Expected the share-coin form to reject an invalid Melon ID, but it moved on');
+    }
+    log.info('Invalid Melon ID correctly rejected');
+
+    await returnToProfileTab();
+    await logout();
+  });
+
+  it('@regression rejects sharing more coins than the current balance', async function () {
+    this.timeout(180000);
+
+    const senderPhone = process.env.TEST_PHONE_NUMBER!;
+    const senderPin = process.env.TEST_PIN!;
+    const recipientMelonId = process.env.TEST_MELON_ID_2!;
+
+    await login(senderPhone, senderPin);
+    await profilePage.open();
+    const balance = await profilePage.getCoinsBalance();
+
+    await profilePage.shareCoinsButton.click();
+    await shareCoinPage.shareCoins(recipientMelonId, String(balance + 999999));
+
+    const stillOnForm = await shareCoinPage.isStillOnForm();
+    if (!stillOnForm) {
+      throw new Error('Expected the share-coin form to reject an amount above balance, but it moved on');
+    }
+    log.info('Over-balance amount correctly rejected');
+
+    await returnToProfileTab();
+    await logout();
+  });
+
+  it('@regression rejects a wrong PIN when confirming a share', async function () {
+    this.timeout(180000);
+
+    const senderPhone = process.env.TEST_PHONE_NUMBER!;
+    const senderPin = process.env.TEST_PIN!;
+    const recipientMelonId = process.env.TEST_MELON_ID_2!;
+
+    await login(senderPhone, senderPin);
+    await profilePage.open();
+    await profilePage.shareCoinsButton.click();
+    await shareCoinPage.shareCoins(recipientMelonId, '10');
+
+    // Deliberately wrong — one digit off from every seeded test PIN.
+    await shareCoinPage.enterPin('0000');
+    await shareCoinPage.incorrectPinError.waitForDisplayed({ timeout: 15000 });
+    log.info('Wrong PIN correctly rejected');
+
+    await returnToProfileTab();
+    await logout();
   });
 });
