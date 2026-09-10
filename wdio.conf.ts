@@ -59,7 +59,7 @@ export const config: WebdriverIO.Config = {
 
     log.info('Launching the app');
     await driver.activateApp('com.melonafrica.staging');
-    await driver.pause(2000); // give the app time to load before the test starts
+    await driver.pause(5000); // give the app time to load before the test starts
   },
 
   beforeTest: async () => {

@@ -14,7 +14,12 @@ import { log } from '../../utils/logger';
 // Tests
 // ---------------------------------------------------------------------------
 describe('Melon share coins', () => {
-  it('@regression shares coins and both sides see the right balance and notification', async () => {
+  it('@regression shares coins and both sides see the right balance and notification', async function () {
+    // This test logs in three separate times (recipient, sender, recipient
+    // again), each a full onboarding-aware login plus modal dismissal — the
+    // global 120s test timeout isn't enough headroom for that.
+    this.timeout(300000);
+
     const senderPhone = process.env.TEST_PHONE_NUMBER;
     const senderPin = process.env.TEST_PIN;
     const recipientPhone = process.env.TEST_PHONE_NUMBER_2;
@@ -47,7 +52,9 @@ describe('Melon share coins', () => {
     await profilePage.shareCoinsButton.click();
     await shareCoinPage.shareCoins(recipientMelonId, String(amount));
     await shareCoinPage.enterPin(senderPin);
-    await shareCoinPage.successHeading.waitForDisplayed();
+    // A real transfer happens server-side here, so give it more than the
+    // default 15s.
+    await shareCoinPage.successHeading.waitForDisplayed({ timeout: 30000 });
     log.info('Share confirmed successful');
 
     // Sender's balance should drop by exactly the shared amount.

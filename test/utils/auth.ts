@@ -12,8 +12,11 @@ import profilePage from '../pageobjects/melon/profile.page';
 // check would wrongly conclude "not onboarding" and get stuck with nothing
 // to tap.
 export async function login(phoneNumber: string, pin: string) {
+  // 30s to match how long the app can genuinely take to render onboarding
+  // after launch under load — a shorter wait here was timing out before the
+  // screen had even appeared, not because it was actually absent.
   const isFreshInstall = await $('~Get started')
-    .waitForDisplayed({ timeout: 10000 })
+    .waitForDisplayed({ timeout: 30000 })
     .catch(() => false);
   if (isFreshInstall) {
     await onboardingPage.getStarted();

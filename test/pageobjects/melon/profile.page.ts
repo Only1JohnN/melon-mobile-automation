@@ -1,3 +1,4 @@
+import homePage from './home.page';
 import { step } from '../../utils/logger';
 
 class ProfilePage {
@@ -41,7 +42,19 @@ class ProfilePage {
 
   async open() {
     step('Opening Profile');
-    await this.profileTab.click();
+    // A promo modal can pop up on Home a moment after login finishes, and
+    // one can even reappear right as we're about to tap the bottom nav —
+    // so we don't just check once, we keep re-checking between short
+    // attempts at the tap itself until one actually lands.
+    for (let attempt = 1; attempt <= 4; attempt++) {
+      await homePage.dismissStrayModalIfPresent();
+      const isReady = await this.profileTab.waitForDisplayed({ timeout: 5000 }).catch(() => false);
+      if (isReady) {
+        await this.profileTab.click();
+        return;
+      }
+    }
+    throw new Error('Could not open Profile — a promo modal kept blocking the bottom nav');
   }
 
   async getCoinsBalance(): Promise<number> {

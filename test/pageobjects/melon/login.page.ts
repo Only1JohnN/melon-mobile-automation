@@ -27,7 +27,10 @@ class LoginPage {
 
   async enterPin(pin: string) {
     step('Entering PIN'); // never log the PIN value itself
-    await this.pinInput.waitForDisplayed();
+    // Submitting the phone number triggers a real backend validation call
+    // before this screen shows up, and that can take a while under load —
+    // give it more than the default 15s.
+    await this.pinInput.waitForDisplayed({ timeout: 30000 });
     await this.pinInput.setValue(pin);
   }
 
