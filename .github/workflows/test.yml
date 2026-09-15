@@ -26,10 +26,18 @@ jobs:
 
       - run: npm ci
 
+      # The staging APK is a release asset on this same repo (see the
+      # "staging-apk" release) rather than an external URL — gh authenticates
+      # with the run's own GITHUB_TOKEN automatically, which also works now
+      # that the repo is private. Re-upload with `gh release upload
+      # staging-apk apps/melon.apk --clobber` whenever the staging build
+      # changes.
       - name: Download staging APK
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p apps
-          curl -L --fail -o apps/melon.apk "${{ secrets.MELON_APK_URL }}"
+          gh release download staging-apk --repo ${{ github.repository }} --pattern melon.apk --dir apps --clobber
 
       - name: Enable KVM (required for hardware-accelerated emulation)
         run: |
