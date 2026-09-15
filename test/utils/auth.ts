@@ -12,6 +12,17 @@ import profilePage from '../pageobjects/melon/profile.page';
 // check would wrongly conclude "not onboarding" and get stuck with nothing
 // to tap.
 export async function login(phoneNumber: string, pin: string) {
+  // The app never actually gets a fresh install between spec-file runs —
+  // autoLaunch is off (see wdio.conf.ts, needed to fix the GPS location
+  // before the app's first launch) and each run just brings the existing
+  // app to the foreground, so it can resume already signed in from
+  // whatever a previous run last did. Sign out first so login() always
+  // starts from the same known screen instead of assuming one.
+  const alreadySignedIn = await homePage.homeTab.isDisplayed().catch(() => false);
+  if (alreadySignedIn) {
+    await logout();
+  }
+
   // 30s to match how long the app can genuinely take to render onboarding
   // after launch under load — a shorter wait here was timing out before the
   // screen had even appeared, not because it was actually absent.

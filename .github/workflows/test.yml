@@ -103,7 +103,15 @@ jobs:
         run: |
           STATS=$(jq -r '.statistic | "\(.passed) passed, \(.failed) failed, \(.broken) broken, \(.skipped) skipped (total \(.total))"' allure-report/widgets/summary.json 2>/dev/null || echo "summary unavailable")
           STATUS="${{ needs.test.result }}"
-          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          # A plain-text emoji prefix reads at a glance in the channel list
+          # without depending on any chat-app-specific card/color format.
+          case "$STATUS" in
+            success) EMOJI="✅" ;;
+            failure) EMOJI="❌" ;;
+            cancelled) EMOJI="⚠️" ;;
+            *) EMOJI="ℹ️" ;;
+          esac
 
           PAGES_LINE=""
           if [ "${{ needs.deploy.result }}" = "success" ]; then
@@ -112,8 +120,8 @@ jobs:
 
           # printf (not bash) expands the \n escapes here, so this comes out
           # as real newlines regardless of how the format string is quoted.
-          MESSAGE=$(printf 'Melon mobile tests: %s on %s (%s)\n%s\nRun: %s%s' \
-            "$STATUS" "${{ github.ref_name }}" "${{ github.sha }}" "$STATS" "$RUN_URL" "$PAGES_LINE")
+          MESSAGE=$(printf '%s Melon mobile tests: %s on %s (%s)\n%s%s' \
+            "$EMOJI" "$STATUS" "${{ github.ref_name }}" "${{ github.sha }}" "$STATS" "$PAGES_LINE")
 
           curl -X POST "$CLIQ_WEBHOOK_URL" \
             -H "Content-Type: application/json" \
