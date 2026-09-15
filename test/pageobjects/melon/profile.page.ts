@@ -67,18 +67,36 @@ class ProfilePage {
   }
 
   // Help Center, Privacy Policy, Terms, and Logout all live further down
-  // the page than the initial view — scroll the content area down once to
-  // bring them into view before interacting with any of them.
+  // the page than the initial view, under "More". The original gesture box
+  // (top:500, height:1600) reached down to y:2100 on a 2340-tall screen —
+  // deep enough to overlap the floating bottom nav pill, which sits over
+  // the scrollable content. A swipe crossing into the nav bar's touch area
+  // gets captured by the nav bar instead of scrolling what's underneath it,
+  // which is why the gesture had no visible effect in CI (confirmed via the
+  // failure screenshot: still showing Personal/Security, "More" barely
+  // peeking at the bottom edge). Keeping the box well above the nav bar,
+  // plus retrying until Logout — the section's stable anchor — actually
+  // shows up, rather than trusting one gesture landed.
   async scrollToMoreSection() {
     step('Scrolling to the More section');
-    await driver.execute('mobile: scrollGesture', {
-      left: 50,
-      top: 500,
-      width: 980,
-      height: 1600,
-      direction: 'down',
-      percent: 0.8,
-    });
+    for (let attempt = 1; attempt <= 5; attempt++) {
+      if (await this.logoutButton.isDisplayed().catch(() => false)) {
+        return;
+      }
+      await driver.execute('mobile: scrollGesture', {
+        left: 50,
+        top: 400,
+        width: 980,
+        height: 800,
+        direction: 'down',
+        percent: 0.8,
+      });
+      await driver.pause(500);
+    }
+
+    if (!(await this.logoutButton.isDisplayed().catch(() => false))) {
+      throw new Error('Could not scroll the More section into view');
+    }
   }
 }
 
