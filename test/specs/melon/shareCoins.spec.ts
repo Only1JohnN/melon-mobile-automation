@@ -115,8 +115,12 @@ describe('Melon share coins', () => {
   it('@regression rejects sharing to an invalid Melon ID', async function () {
     this.timeout(180000);
 
-    const senderPhone = process.env.TEST_PHONE_NUMBER!;
-    const senderPin = process.env.TEST_PIN!;
+    const senderPhone = process.env.TEST_PHONE_NUMBER;
+    const senderPin = process.env.TEST_PIN;
+
+    if (!senderPhone || !senderPin) {
+      throw new Error('Set TEST_PHONE_NUMBER and TEST_PIN in .env to run this spec');
+    }
 
     await login(senderPhone, senderPin);
     await profilePage.open();
@@ -138,9 +142,13 @@ describe('Melon share coins', () => {
   it('@regression rejects sharing more coins than the current balance', async function () {
     this.timeout(180000);
 
-    const senderPhone = process.env.TEST_PHONE_NUMBER!;
-    const senderPin = process.env.TEST_PIN!;
-    const recipientMelonId = process.env.TEST_MELON_ID_2!;
+    const senderPhone = process.env.TEST_PHONE_NUMBER;
+    const senderPin = process.env.TEST_PIN;
+    const recipientMelonId = process.env.TEST_MELON_ID_2;
+
+    if (!senderPhone || !senderPin || !recipientMelonId) {
+      throw new Error('Set TEST_PHONE_NUMBER, TEST_PIN and TEST_MELON_ID_2 in .env to run this spec');
+    }
 
     await login(senderPhone, senderPin);
     await profilePage.open();
@@ -162,9 +170,13 @@ describe('Melon share coins', () => {
   it('@regression rejects a wrong PIN when confirming a share', async function () {
     this.timeout(180000);
 
-    const senderPhone = process.env.TEST_PHONE_NUMBER!;
-    const senderPin = process.env.TEST_PIN!;
-    const recipientMelonId = process.env.TEST_MELON_ID_2!;
+    const senderPhone = process.env.TEST_PHONE_NUMBER;
+    const senderPin = process.env.TEST_PIN;
+    const recipientMelonId = process.env.TEST_MELON_ID_2;
+
+    if (!senderPhone || !senderPin || !recipientMelonId) {
+      throw new Error('Set TEST_PHONE_NUMBER, TEST_PIN and TEST_MELON_ID_2 in .env to run this spec');
+    }
 
     await login(senderPhone, senderPin);
     await profilePage.open();

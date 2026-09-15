@@ -47,6 +47,12 @@ jobs:
 
       - name: Run tests on emulator
         uses: reactivecircus/android-emulator-runner@v2
+        env:
+          TEST_PHONE_NUMBER: ${{ secrets.TEST_PHONE_NUMBER }}
+          TEST_PIN: ${{ secrets.TEST_PIN }}
+          TEST_PHONE_NUMBER_2: ${{ secrets.TEST_PHONE_NUMBER_2 }}
+          TEST_PIN_2: ${{ secrets.TEST_PIN_2 }}
+          TEST_MELON_ID_2: ${{ secrets.TEST_MELON_ID_2 }}
         with:
           api-level: 35
           target: google_apis
@@ -128,8 +134,8 @@ jobs:
 
           # printf (not bash) expands the \n escapes here, so this comes out
           # as real newlines regardless of how the format string is quoted.
-          MESSAGE=$(printf '%s Melon mobile tests: %s on %s (%s)\n%s%s' \
-            "$EMOJI" "$STATUS" "${{ github.ref_name }}" "${{ github.sha }}" "$STATS" "$PAGES_LINE")
+          MESSAGE=$(printf '%s Melon mobile tests: %s\n%s%s' \
+            "$EMOJI" "$STATUS" "$STATS" "$PAGES_LINE")
 
           curl -X POST "$CLIQ_WEBHOOK_URL" \
             -H "Content-Type: application/json" \

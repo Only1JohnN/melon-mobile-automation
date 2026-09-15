@@ -19,8 +19,12 @@ describe('Melon spin the wheel', () => {
   it('@regression opens the Daily Melon Wheel from the Home free-spin gate', async function () {
     this.timeout(120000);
 
-    const phone = process.env.TEST_PHONE_NUMBER!;
-    const pin = process.env.TEST_PIN!;
+    const phone = process.env.TEST_PHONE_NUMBER;
+    const pin = process.env.TEST_PIN;
+
+    if (!phone || !pin) {
+      throw new Error('Set TEST_PHONE_NUMBER and TEST_PIN in .env to run this spec');
+    }
 
     await login(phone, pin);
     await homePage.dismissStrayModalIfPresent();
