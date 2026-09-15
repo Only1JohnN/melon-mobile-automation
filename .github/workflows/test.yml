@@ -57,6 +57,14 @@ jobs:
           api-level: 35
           target: google_apis
           arch: x86_64
+          # Without this, avdmanager falls back to a tiny generic 320x640
+          # profile with no --device flag — every pixel-based heuristic in
+          # the page objects (scroll bounds, modal-icon detection) is
+          # calibrated for a 1080x2340 screen and silently breaks on that
+          # default, which is what caused the CI-only "~Logout not found"
+          # failures (confirmed by pulling the actual failure screenshots
+          # from the Allure report artifact and checking their dimensions).
+          profile: pixel_5
           avd-name: ${{ env.ANDROID_AVD_NAME }}
           force-avd-creation: false
           disable-animations: true
